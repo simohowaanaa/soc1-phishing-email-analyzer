@@ -8,7 +8,7 @@ Projet personnel et pédagogique : construire un outil local qui aide un analyst
 
 ## État du projet
 
-Fonctionnalités disponibles : lecture des en-têtes, extraction prudente du texte, repérage de formulations et de liens, désactivation des URL dans le rapport et inventaire des métadonnées des pièces jointes et export des rapports texte/JSON. Chaque étape est documentée dans `docs/` et illustrée avec des exemples synthétiques.
+Fonctionnalités disponibles : lecture des en-têtes, extraction prudente du texte, repérage de formulations et de liens, désactivation des URL dans le rapport et inventaire des métadonnées des pièces jointes et export des rapports texte, JSON et Markdown. Chaque étape est documentée dans `docs/` et illustrée avec des exemples synthétiques.
 
 ## Sécurité et confidentialité
 

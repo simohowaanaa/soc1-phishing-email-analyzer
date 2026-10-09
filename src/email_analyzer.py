@@ -302,9 +302,9 @@ def read_general_information(path: Path) -> dict[str, Any]:
     from_domain = _domain_from_address(headers["from"])
     reply_to_domain = _domain_from_address(headers["reply_to"])
     reply_to_domain_differs = (
-        from_domain is not None
-        and reply_to_domain is not None
-        and from_domain != reply_to_domain
+        None
+        if from_domain is None or reply_to_domain is None
+        else from_domain != reply_to_domain
     )
 
     plain_parts, html_parts, html_links, body_warnings = _extract_text(message)
@@ -322,7 +322,7 @@ def read_general_information(path: Path) -> dict[str, Any]:
                 "observed": reply_to_domain_differs,
                 "from_domain": from_domain,
                 "reply_to_domain": reply_to_domain,
-                "meaning": "From et Reply-To indiquent des domaines différents; cela mérite un examen, mais ne prouve pas une fraude.",
+                "meaning": "Une différence de domaine entre From et Reply-To mérite un examen, mais ne prouve pas une fraude.",
             }
         ],
         "body": {
@@ -365,7 +365,12 @@ def render_text(report: dict[str, Any]) -> str:
         lines.extend((f"- {value}" for value in values) if values else ["- absent"])
 
     for indicator in report["indicators_to_review"]:
-        status = "à examiner" if indicator["observed"] else "aucune différence de domaine observée"
+        if indicator["observed"] is True:
+            status = "à examiner"
+        elif indicator["observed"] is False:
+            status = "aucune différence de domaine observée"
+        else:
+            status = "non évalué : domaine absent ou indéterminé"
         lines.extend(["", f"Indice à examiner — {indicator['id']} : {status}"])
         lines.append(f"  {indicator['meaning']}")
 
@@ -411,12 +416,92 @@ def render_text(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _markdown_code(value: Any) -> str:
+    """Place une valeur non fiable dans un code span Markdown inerte."""
+    text = str(value).replace(chr(13), " ").replace(chr(10), " ")
+    runs = re.findall(r"`+", text)
+    fence = "`" * (max((len(run) for run in runs), default=0) + 1)
+    padding = " " if text.startswith("`") or text.endswith("`") else ""
+    return f"{fence}{padding}{text}{padding}{fence}"
+
+
+def render_markdown(report: dict[str, Any]) -> str:
+    """Produit un rapport Markdown dont les données du message restent inertes."""
+    labels = {
+        "from": "Expéditeur (From)",
+        "to": "Destinataire (To)",
+        "subject": "Objet (Subject)",
+        "date": "Date",
+        "reply_to": "Réponse à (Reply-To)",
+    }
+    lines = ["# Rapport d'analyse e-mail", "", f"Fichier : {_markdown_code(report['source_file'])}", "", "## Informations générales"]
+    for field, label in labels.items():
+        value = report["headers"][field]
+        lines.append(f"- **{label} :** {_markdown_code(value if value is not None else 'absent')}")
+
+    observed = report["observed_routing_and_authentication"]
+    lines.extend(["", "## Routage et authentification observés", "", f"Lignes `Received` : {len(observed['received'])}"])
+    lines.extend(f"- {_markdown_code(value)}" for value in observed["received"])
+    for field, label in (
+        ("authentication_results", "Authentication-Results"),
+        ("arc_authentication_results", "ARC-Authentication-Results"),
+    ):
+        values = observed[field]
+        lines.extend(["", f"### {label}"])
+        lines.extend((f"- {_markdown_code(value)}" for value in values) if values else ["- absent"])
+
+    lines.extend(["", "## Indices à examiner"])
+    for indicator in report["indicators_to_review"]:
+        if indicator["observed"] is True:
+            status = "à examiner"
+        elif indicator["observed"] is False:
+            status = "aucune différence de domaine observée"
+        else:
+            status = "non évalué : domaine absent ou indéterminé"
+        lines.append(f"- **{_markdown_code(indicator['id'])} — {status}.** {indicator['meaning']}")
+
+    body = report["body"]
+    lines.extend(["", "## Corps du message", "", f"{body['plain_text_parts']} partie(s) texte brut ; {body['html_parts']} partie(s) HTML. Le HTML est extrait sans rendu."])
+    if body["language_indicators"]:
+        lines.extend(["", "Formulations relevées (indices, pas une conclusion) :"])
+        lines.extend(f"- {_markdown_code(item['category'])} : {_markdown_code(item['evidence'])}" for item in body["language_indicators"])
+    else:
+        lines.extend(["", "Aucune formulation surveillée détectée par les règles simples actuelles."])
+    lines.extend(f"- Avertissement de lecture : {_markdown_code(warning)}" for warning in body["content_warnings"])
+
+    lines.extend(["", "## Liens", "", f"Liens trouvés : {len(report['links'])}"])
+    for number, link in enumerate(report["links"], start=1):
+        lines.append(f"- **Lien {number} ({link['source']}) :** {_markdown_code(link['destination'])}")
+        lines.append(f"  - Domaine : {_markdown_code(link['domain'] or 'non déterminé')}")
+        if link["visible_text"]:
+            lines.append(f"  - Texte affiché : {_markdown_code(link['visible_text'])}")
+        if link["displayed_url_domain_differs"] is not None:
+            status = "différent" if link["displayed_url_domain_differs"] else "identique"
+            lines.append(f"  - Domaine du texte URL / destination : {status}")
+
+    lines.extend(["", "## Pièces jointes", "", f"Pièces jointes trouvées : {len(report['attachments'])}"])
+    for number, attachment in enumerate(report["attachments"], start=1):
+        size = attachment["size_bytes"]
+        size_display = f"{size} octet(s)" if size is not None else "indisponible"
+        lines.append(f"- **Pièce {number} :** {_markdown_code(attachment['filename'])}")
+        lines.append(f"  - Type déclaré : {_markdown_code(attachment['content_type_declared'])} ; taille : {size_display}")
+        lines.append(f"  - SHA-256 : {_markdown_code(attachment['sha256'] or attachment['sha256_note'])}")
+        if attachment["extension_to_review"]:
+            lines.append("  - Extension à examiner ; ce signal ne suffit pas à conclure que le fichier est malveillant.")
+        lines.append(f"  - {attachment['note']}")
+
+    lines.extend(["", "## Limites", "", report["scope"]])
+    return chr(10).join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Lit un fichier .eml local sans visiter ses liens ni ouvrir ses pièces jointes."
     )
     parser.add_argument("eml", type=Path, help="Chemin vers le fichier .eml à lire")
-    parser.add_argument("--json", action="store_true", help="Affiche les informations en JSON")
+    format_group = parser.add_mutually_exclusive_group()
+    format_group.add_argument("--json", action="store_true", help="Produit le rapport en JSON")
+    format_group.add_argument("--markdown", action="store_true", help="Produit le rapport en Markdown")
     parser.add_argument("--output", type=Path, help="Enregistre le rapport dans un fichier")
     args = parser.parse_args(argv)
 
@@ -428,11 +513,12 @@ def main(argv: list[str] | None = None) -> int:
     except OSError as error:
         parser.error(f"impossible de lire le fichier : {error}")
 
-    rendered = (
-        json.dumps(report, ensure_ascii=False, indent=2)
-        if args.json
-        else render_text(report)
-    )
+    if args.json:
+        rendered = json.dumps(report, ensure_ascii=False, indent=2)
+    elif args.markdown:
+        rendered = render_markdown(report)
+    else:
+        rendered = render_text(report)
     if args.output:
         try:
             args.output.parent.mkdir(parents=True, exist_ok=True)
