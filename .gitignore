@@ -8,3 +8,10 @@ venv/
 *.log
 .DS_Store
 Thumbs.db
+
+# Rapports générés pouvant contenir des indicateurs ou données sensibles
+reports/*
+!reports/.gitkeep
+!reports/analyse-piece-jointe.json
+!reports/analyse-piece-jointe.txt
+!reports/analyse-liens.md

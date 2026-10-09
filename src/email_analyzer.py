@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 from email import policy
 from email.parser import BytesParser
@@ -13,6 +14,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
+
+from virustotal_client import lookup_indicators
 
 
 HEADER_FIELDS = {
@@ -412,6 +415,23 @@ def render_text(report: dict[str, Any]) -> str:
             lines.append("  Extension à examiner : cela ne suffit pas à conclure que le fichier est malveillant.")
         lines.append(f"  {attachment['note']}")
 
+    vt = report.get("virustotal")
+    if vt:
+        lines.extend(["", "VirusTotal — réputation externe (pas un verdict)", vt["notice"]])
+        if not vt["results"]:
+            lines.append("Aucun indicateur public admissible à la consultation (les domaines de démonstration sont ignorés).")
+        for item in vt["results"]:
+            lines.append(f"- {item['type']} {item['indicator']} : {item['status']}")
+            if item.get("last_analysis_stats"):
+                stats = item["last_analysis_stats"]
+                lines.append("  Résultats antivirus : " + ", ".join(f"{key}={value}" for key, value in sorted(stats.items())))
+            if item.get("reputation") is not None:
+                lines.append(f"  Réputation communautaire : {item['reputation']}")
+            if item.get("http_status"):
+                lines.append(f"  Code HTTP : {item['http_status']}")
+        if vt["not_queried_count"]:
+            lines.append(f"Indicateurs non interrogés (limite par exécution) : {vt['not_queried_count']}")
+
     lines.extend(["", f"Limite : {report['scope']}"])
     return "\n".join(lines)
 
@@ -490,6 +510,23 @@ def render_markdown(report: dict[str, Any]) -> str:
             lines.append("  - Extension à examiner ; ce signal ne suffit pas à conclure que le fichier est malveillant.")
         lines.append(f"  - {attachment['note']}")
 
+    vt = report.get("virustotal")
+    if vt:
+        lines.extend(["", "## Réputation VirusTotal", "", vt["notice"], ""])
+        if not vt["results"]:
+            lines.append("Aucun indicateur public admissible à la consultation (les domaines de démonstration sont ignorés).")
+        for item in vt["results"]:
+            lines.append(f"- **{item['type']} {_markdown_code(item['indicator'])} :** {item['status']}")
+            if item.get("last_analysis_stats"):
+                stats = item["last_analysis_stats"]
+                lines.append("  - Détections observées : " + ", ".join(f"{key}={value}" for key, value in sorted(stats.items())))
+            if item.get("reputation") is not None:
+                lines.append(f"  - Réputation communautaire : {item['reputation']}")
+            if item.get("http_status"):
+                lines.append(f"  - Code HTTP : {item['http_status']}")
+        if vt["not_queried_count"]:
+            lines.append(f"Indicateurs non interrogés (limite par exécution) : {vt['not_queried_count']}")
+
     lines.extend(["", "## Limites", "", report["scope"]])
     return chr(10).join(lines)
 
@@ -502,6 +539,7 @@ def main(argv: list[str] | None = None) -> int:
     format_group = parser.add_mutually_exclusive_group()
     format_group.add_argument("--json", action="store_true", help="Produit le rapport en JSON")
     format_group.add_argument("--markdown", action="store_true", help="Produit le rapport en Markdown")
+    parser.add_argument("--virustotal", action="store_true", help="Consulte VirusTotal (envoie domaines/empreintes au service)")
     parser.add_argument("--output", type=Path, help="Enregistre le rapport dans un fichier")
     args = parser.parse_args(argv)
 
@@ -512,6 +550,12 @@ def main(argv: list[str] | None = None) -> int:
         report = read_general_information(args.eml)
     except OSError as error:
         parser.error(f"impossible de lire le fichier : {error}")
+
+    if args.virustotal:
+        api_key = os.environ.get("VT_API_KEY")
+        if not api_key:
+            parser.error("variable VT_API_KEY absente ; configure ta clé localement, sans la partager dans le chat ni l'ajouter au dépôt")
+        report["virustotal"] = lookup_indicators(report, api_key)
 
     if args.json:
         rendered = json.dumps(report, ensure_ascii=False, indent=2)
