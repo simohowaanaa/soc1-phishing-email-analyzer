@@ -1,0 +1,32 @@
+Fichier : 04-piece-jointe-synthetique.eml
+
+Informations générales lues :
+- Expéditeur (From) : Formation SOC <formation@example.invalid>
+- Destinataire (To) : Analyste SOC <analyste@example.invalid>
+- Objet (Subject) : Exercice local - inventaire de piece jointe
+- Date : Fri, 09 Oct 2026 11:00:00 +0000
+- Réponse à (Reply-To) : absent
+
+Lignes Received : 0
+
+Authentication-Results observé :
+- absent
+
+ARC-Authentication-Results observé :
+- absent
+
+Indice à examiner — reply_to_domain_differs : aucune différence de domaine observée
+  From et Reply-To indiquent des domaines différents; cela mérite un examen, mais ne prouve pas une fraude.
+
+Corps du message : 1 partie(s) texte brut, 0 partie(s) HTML (texte visible extrait sans rendu).
+Aucune formulation surveillée détectée par les règles simples actuelles.
+
+Liens trouvés : 0
+
+Pièces jointes trouvées : 1
+- Pièce 1 : notes-exercice.txt
+  Type déclaré : text/plain ; taille : 39 octet(s)
+  SHA-256 : d342f642bf1d2ab4f21abaadbab5347356f15b24456ed61c10c4a04b69e8691a
+  Métadonnées uniquement : le fichier n'est ni extrait sur disque ni ouvert.
+
+Limite : En-têtes, texte, destinations URL désactivées et métadonnées de pièces jointes uniquement; aucun lien n'est visité, aucune pièce jointe n'est ouverte ou extraite, et SPF/DKIM/DMARC ne sont pas revérifiés.

@@ -1,0 +1,17 @@
+From: Service comptes <support@banque-exemple.invalid>
+To: Analyste SOC <analyste@example.invalid>
+Reply-To: aide@reponse-inattendue.invalid
+Date: Fri, 09 Oct 2026 09:15:00 +0000
+Subject: Action requise : confirmer votre compte
+Message-ID: <demo-001@banque-exemple.invalid>
+Received: from mailer.reponse-inattendue.invalid (192.0.2.25) by mx.example.invalid
+Authentication-Results: mx.example.invalid; spf=pass smtp.mailfrom=banque-exemple.invalid; dkim=none; dmarc=fail header.from=banque-exemple.invalid
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Bonjour,
+
+Votre compte sera suspendu aujourd'hui. Confirmez immédiatement vos informations ici :
+https://connexion.banque-exemple.invalid/confirmer
+
+Cet exemple est fictif. Le domaine .invalid n'est pas destiné à une vraie connexion.

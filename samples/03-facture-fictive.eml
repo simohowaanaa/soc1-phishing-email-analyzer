@@ -1,0 +1,17 @@
+From: Comptabilité Démo <factures@fournisseur-exemple.invalid>
+To: Analyste SOC <analyste@example.invalid>
+Date: Fri, 09 Oct 2026 11:05:00 +0000
+Subject: Copie de facture de démonstration
+Message-ID: <demo-003@fournisseur-exemple.invalid>
+Received: from mail.fournisseur-exemple.invalid (192.0.2.60) by mx.example.invalid
+Authentication-Results: mx.example.invalid; spf=pass smtp.mailfrom=fournisseur-exemple.invalid; dkim=pass header.d=fournisseur-exemple.invalid; dmarc=pass header.from=fournisseur-exemple.invalid
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Bonjour,
+
+Voici le rappel de la facture de démonstration numéro DEMO-2026-014.
+Aucune pièce jointe n'est incluse dans cet exemple.
+
+Cordialement,
+Comptabilité Démo

@@ -1,0 +1,44 @@
+{
+  "source_file": "04-piece-jointe-synthetique.eml",
+  "headers": {
+    "from": "Formation SOC <formation@example.invalid>",
+    "to": "Analyste SOC <analyste@example.invalid>",
+    "subject": "Exercice local - inventaire de piece jointe",
+    "date": "Fri, 09 Oct 2026 11:00:00 +0000",
+    "reply_to": null
+  },
+  "observed_routing_and_authentication": {
+    "received": [],
+    "authentication_results": [],
+    "arc_authentication_results": []
+  },
+  "indicators_to_review": [
+    {
+      "id": "reply_to_domain_differs",
+      "observed": false,
+      "from_domain": "example.invalid",
+      "reply_to_domain": null,
+      "meaning": "From et Reply-To indiquent des domaines différents; cela mérite un examen, mais ne prouve pas une fraude."
+    }
+  ],
+  "body": {
+    "plain_text_parts": 1,
+    "html_parts": 0,
+    "content_warnings": [],
+    "language_indicators": []
+  },
+  "links": [],
+  "attachments": [
+    {
+      "filename": "notes-exercice.txt",
+      "content_type_declared": "text/plain",
+      "disposition": "attachment",
+      "size_bytes": 39,
+      "sha256": "d342f642bf1d2ab4f21abaadbab5347356f15b24456ed61c10c4a04b69e8691a",
+      "sha256_note": null,
+      "extension_to_review": false,
+      "note": "Métadonnées uniquement : le fichier n'est ni extrait sur disque ni ouvert."
+    }
+  ],
+  "scope": "En-têtes, texte, destinations URL désactivées et métadonnées de pièces jointes uniquement; aucun lien n'est visité, aucune pièce jointe n'est ouverte ou extraite, et SPF/DKIM/DMARC ne sont pas revérifiés."
+}

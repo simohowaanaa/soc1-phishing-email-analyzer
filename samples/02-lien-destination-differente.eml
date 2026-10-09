@@ -1,0 +1,16 @@
+From: Portail RH <notifications@rh-exemple.invalid>
+To: Analyste SOC <analyste@example.invalid>
+Date: Fri, 09 Oct 2026 10:30:00 +0000
+Subject: Document à consulter
+Message-ID: <demo-002@rh-exemple.invalid>
+Received: from relay.rh-exemple.invalid (192.0.2.40) by mx.example.invalid
+Authentication-Results: mx.example.invalid; spf=pass smtp.mailfrom=rh-exemple.invalid; dkim=pass header.d=rh-exemple.invalid; dmarc=pass header.from=rh-exemple.invalid
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<html><body>
+<p>Bonjour, un document est disponible pour votre examen.</p>
+<p><a href="https://espace-partage.example.invalid/document-demo">https://portail-rh.example.invalid</a></p>
+</body></html>
+
+Exemple pédagogique : les domaines et destinations sont fictifs (.invalid).
